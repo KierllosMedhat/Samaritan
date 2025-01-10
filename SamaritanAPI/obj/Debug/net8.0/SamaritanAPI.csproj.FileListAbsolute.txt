@@ -172,3 +172,4 @@ D:\Projects\Samaritan\SamaritanAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Cryptog
 D:\Projects\Samaritan\SamaritanAPI\bin\Debug\net8.0\Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
 D:\Projects\Samaritan\SamaritanAPI\bin\Debug\net8.0\Microsoft.Extensions.Identity.Core.dll
 D:\Projects\Samaritan\SamaritanAPI\bin\Debug\net8.0\Microsoft.Extensions.Identity.Stores.dll
+D:\Projects\Samaritan\SamaritanAPI\obj\Debug\net8.0\SamaritanAPI.sourcelink.json

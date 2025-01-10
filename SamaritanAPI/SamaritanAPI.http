@@ -1,6 +1,6 @@
-@SamaritanAPI_HostAddress = http://localhost:5002
+@SamaritanAPI_HostAddress = https://localhost:5002
 
-GET {{SamaritanAPI_HostAddress}}/weatherforecast/
+GET {{SamaritanAPI_HostAddress}}/api/
 Accept: application/json
 
 ###
