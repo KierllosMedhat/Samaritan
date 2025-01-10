@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "JAe7AYab3FVk6Vm6EqsW08SCcu5HPH6nUbL7ZQJZHwg=",
+  "Source": "SamaritanAPI",
+  "BasePath": "_content/SamaritanAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
