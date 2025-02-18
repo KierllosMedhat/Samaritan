@@ -41,18 +41,28 @@ namespace SamaritanAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateDonor([FromBody] Donor donor)
         {
-            await donorRepository.CreateDonor(donor);
-            return CreatedAtAction(nameof(GetDonorById), new { id = donor.Id }, donor);
+            if(ModelState.IsValid)
+            {
+                await donorRepository.CreateDonor(donor);
+                return CreatedAtAction(nameof(GetDonorById), new { id = donor.Id }, donor);
+            }
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateDonor(int id, [FromBody] Donor donor)
         {
-            var existingDonor = await donorRepository.GetDonorById(id);
-            if (id != donor.Id || existingDonor == null)
-                return BadRequest();
-            await donorRepository.UpdateDonor(donor);
-            return Ok();
+            if(ModelState.IsValid)
+            {
+                var existingDonor = await donorRepository.GetDonorById(id);
+                if (id != donor.Id || existingDonor == null)
+                    return BadRequest();
+                await donorRepository.UpdateDonor(donor);
+                return Ok();
+            }
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpDelete("{id}")]

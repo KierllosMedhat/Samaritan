@@ -19,14 +19,14 @@ namespace SamaritanAPI.Controllers
             => this.patientRepository = patientRepository;
         
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
+        public async Task<IActionResult> GetPatients()
         {
             var patients = await patientRepository.GetPatients();
             return Ok(patients);
         }
         
         [HttpGet("{id}")]
-        public async Task<ActionResult<Patient>> GetPatient(int id)
+        public async Task<IActionResult> GetPatient(int id)
         {
             var patient = await patientRepository.GetPatient(id);
             if (patient == null)
@@ -37,7 +37,7 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpGet("{id}/requests")]
-        public async Task<ActionResult<IEnumerable<Request>>> GetPatientRequests(int id)
+        public async Task<IActionResult> GetPatientRequests(int id)
         {
             var requests = await patientRepository.GetPatientRequests(id);
             if (requests == null)
@@ -48,10 +48,11 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Patient>> CreatePatient(Patient patient)
+        public async Task<IActionResult> CreatePatient(Patient patient)
         {
-            if(ModelState.IsValid == false)
+            if(!ModelState.IsValid)
             {
+                ModelState.AddModelError("","Invalid Format!");
                 return BadRequest(ModelState);
             }
             await patientRepository.CreatePatient(patient);
@@ -59,19 +60,22 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<Patient>> UpdatePatient(int id, [FromBody] Patient patient)
+        public async Task<IActionResult> UpdatePatient(int id, [FromBody] Patient patient)
         {
             var existingPatient = await patientRepository.GetPatient(id);
             if (existingPatient == null)
                 NotFound();
             if(!ModelState.IsValid)
+            {
+                ModelState.AddModelError("","Invalid Format!");
                 return BadRequest(ModelState);
+            }
             await patientRepository.UpdatePatient(patient);
-            return NoContent();
+            return Ok();
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeletePatient(int id)
+        public async Task<IActionResult> DeletePatient(int id)
         {
             var patient = await patientRepository.GetPatient(id);
             if (patient == null)
@@ -79,7 +83,7 @@ namespace SamaritanAPI.Controllers
                 return NotFound();
             }
             await patientRepository.DeletePatient(id);
-            return NoContent();
+            return Ok();
         }
     }
 }

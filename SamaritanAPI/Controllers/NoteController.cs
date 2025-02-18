@@ -15,23 +15,21 @@ namespace SamaritanAPI.Controllers
     [Route("api/[controller]")]
     public class NoteController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
         private readonly INoteRepository noteRepository;
 
-        public NoteController(ApplicationDbContext context, INoteRepository noteRepository)
+        public NoteController(INoteRepository noteRepository)
         {
             this.noteRepository = noteRepository;
-            this.context = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Note>>> GetAllNotes()
+        public async Task<IActionResult> GetAllNotes()
         {
             var notes = await noteRepository.GetAllNotes();
             return Ok(notes);
         }
 
-        [HttpGet($"{{donorId}}")]
+        [HttpGet("donor/{donorId}")]
         public async Task<ActionResult<List<Note>>> GetNotesByDonorId(int donorId)
         {
             var notes = await noteRepository.GetNotesByDonorId(donorId);
@@ -42,8 +40,8 @@ namespace SamaritanAPI.Controllers
             return Ok(notes);
         }
 
-        [HttpGet($"{{noteId}}")]
-        public async Task<ActionResult<Note>> GetNote(int noteId)
+        [HttpGet("{noteId}")]
+        public async Task<IActionResult> GetNote(int noteId)
         {
             var note = await noteRepository.GetNote(noteId);
             if (note == null)
@@ -54,22 +52,30 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Note>> CreateNote([FromBody] Note note)
+        public async Task<IActionResult> CreateNote([FromBody] Note note)
         {
-            await noteRepository.CreateNote(note);
-            return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note);
+            if(ModelState.IsValid)
+            {
+                await noteRepository.CreateNote(note);
+                return CreatedAtAction(nameof(GetNote), new { id = note.Id }, note);
+            }
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpPut("{noteId}")]
-        public async Task<ActionResult<Note>> UpdateNote(int noteId, [FromBody] Note note)
+        public async Task<IActionResult> UpdateNote(int noteId, [FromBody] Note note)
         {
-            var existingNote = await noteRepository.GetNote(noteId);
-            if (existingNote == null)
+            if(ModelState.IsValid)
             {
-                return NotFound();
+                var existingNote = await noteRepository.GetNote(noteId);
+                if (existingNote == null)
+                    return NotFound();
+                await noteRepository.UpdateNote(note);
+                return Ok(note);
             }
-            await noteRepository.UpdateNote(note);
-            return Ok(note);
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpDelete("{noteId}")]

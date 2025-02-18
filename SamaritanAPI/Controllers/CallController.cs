@@ -15,24 +15,22 @@ namespace SamaritanAPI.Controllers
     [Route("api/[controller]")]
     public class CallController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
         private readonly ICallRepository callRepository;
 
-        public CallController(ApplicationDbContext context, ICallRepository callRepository)
+        public CallController(ICallRepository callRepository)
         {
-            this.context = context;
             this.callRepository = callRepository;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<Call>>> GetCalls()
+        public async Task<IActionResult> GetCalls()
         {
             var calls = await callRepository.GetCalls();
             return Ok(calls);
         }
 
-        [HttpGet($"{{donorId}}")]
-        public async Task<ActionResult<List<Call>>> GetCallsByUserId(int donorId)
+        [HttpGet("donor/{donorId}")]
+        public async Task<IActionResult> GetCallsByDonorId(int donorId)
         {
             var calls = await callRepository.GetCallsByDonorId(donorId);
             if (calls == null)
@@ -42,8 +40,8 @@ namespace SamaritanAPI.Controllers
             return Ok(calls);
         }
 
-        [HttpGet($"{{callId}}")]
-        public async Task<ActionResult<Call>> GetCallById(int callId)
+        [HttpGet("{callId}")]
+        public async Task<IActionResult> GetCallById(int callId)
         {
             var call = await callRepository.GetCallById(callId);
             if (call == null)
@@ -54,23 +52,32 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Call>> CreateCall([FromBody] Call call)
+        public async Task<IActionResult> CreateCall([FromBody] Call call)
         {
-            await callRepository.CreateCall(call);
-            return CreatedAtAction(nameof(GetCallById), new { callId = call.Id }, call);
+            if(ModelState.IsValid)
+            {
+                await callRepository.CreateCall(call);
+                return CreatedAtAction(nameof(GetCallById), new { callId = call.Id }, call);
+            }
+            ModelState.AddModelError("","Invalid Call Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpPost("{callId}")]
-        public async Task<ActionResult<Call>> UpdateCall(int callId, [FromBody] Call call)
+        public async Task<IActionResult> UpdateCall(int callId, [FromBody] Call call)
         {
-            var existingCall = await callRepository.GetCallById(callId);
-            if (existingCall == null)
+            if(ModelState.IsValid)
             {
-                return NotFound();
+                var existingCall = await callRepository.GetCallById(callId);
+                if (existingCall == null)
+                {
+                    return NotFound();
+                }
+                await callRepository.UpdateCall(call);
+                return Ok(call);
             }
-            call.Id = callId;
-            await callRepository.UpdateCall(call);
-            return Ok(call);
+            ModelState.AddModelError("","Wrong Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpDelete("{callId}")]

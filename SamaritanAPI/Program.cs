@@ -5,16 +5,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SamaritanAPI.Authentication;
 using SamaritanAPI.Data;
 using SamaritanAPI.Repositories;
 using SamaritanAPI.Repositories.Interfaces;
+using SamaritanAPI.Services;
 
 namespace SamaritanAPI
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +25,31 @@ namespace SamaritanAPI
             builder.Services.AddControllers();
 
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the bearer scheme. Example Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
             
             builder.Services.AddScoped<ICallRepository, CallRepository>();
             builder.Services.AddScoped<INoteRepository, NoteRepository>();
@@ -32,11 +58,13 @@ namespace SamaritanAPI
             builder.Services.AddScoped<IDonorRepository, DonorRepository>();
             builder.Services.AddScoped<IServantCompanionRepository, ServantCompanionRepository>();
 
+            builder.Services.AddSingleton<SeedingServices>();
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            builder.Services.AddIdentityCore<AppUser>()
+            builder.Services.AddIdentity<AppUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
@@ -65,9 +93,16 @@ namespace SamaritanAPI
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret))
                 };
             });
-
+            
             var app = builder.Build();
-
+            
+            // Make Sure Roles Are Added to the database
+            using (var scope = app.Services.CreateScope())
+            {
+                var seedingService = scope.ServiceProvider.GetRequiredService<SeedingServices>();
+                await seedingService.SeedingRolesAsync();
+            }
+            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

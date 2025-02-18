@@ -17,9 +17,7 @@ namespace SamaritanAPI.Controllers
         private readonly IServantCompanionRepository servantCompanionRepository;
 
         public ServantCompanionController(IServantCompanionRepository servantCompanionRepository)
-        {
-            this.servantCompanionRepository = servantCompanionRepository;
-        }
+            => this.servantCompanionRepository = servantCompanionRepository;
 
         [HttpGet]
         public async Task<IActionResult> GetServantCompanions()
@@ -57,20 +55,30 @@ namespace SamaritanAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateServantCompanion([FromBody] ServantCompanion servantCompanion)
         {
-            await servantCompanionRepository.CreateServantCompanion(servantCompanion);
-            return Ok();
+            if(ModelState.IsValid)
+            {
+                await servantCompanionRepository.CreateServantCompanion(servantCompanion);
+                return Ok();
+            }
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateServantCompanion(int id, [FromBody] ServantCompanion servantCompanion)
         {
-            var existingServant = await servantCompanionRepository.GetServantCompanion(id);
-            if (id != servantCompanion.Id || existingServant is null)
+            if(ModelState.IsValid)
             {
-                return NotFound();
+                var existingServant = await servantCompanionRepository.GetServantCompanion(id);
+                if (id != servantCompanion.Id || existingServant is null)
+                {
+                    return NotFound();
+                }
+                await servantCompanionRepository.UpdateServantCompanion(servantCompanion);
+                return Ok();
             }
-            await servantCompanionRepository.UpdateServantCompanion(servantCompanion);
-            return Ok();
+            ModelState.AddModelError("","Invalid Format!");
+            return BadRequest(ModelState);
         }
 
         [HttpDelete("{id}")]

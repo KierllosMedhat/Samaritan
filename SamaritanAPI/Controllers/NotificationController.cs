@@ -25,8 +25,8 @@ namespace SamaritanAPI.Controllers
             this.notificationRepository = notificationRepository;
         }
 
-        [HttpGet($"{{userId}}")]
-        public async Task<ActionResult<IEnumerable<Notification>>> GetUserNotifications(string userId)
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetUserNotifications(string userId)
         {
             var notifications = await notificationRepository.GetUserNotifications(userId);
             if (notifications is null)
@@ -36,8 +36,8 @@ namespace SamaritanAPI.Controllers
             return Ok(notifications);
         }
 
-        [HttpGet($"{{Id}}")]
-        public async Task<ActionResult<Notification>> GetNotificationById(int Id)
+        [HttpGet("{Id}")]
+        public async Task<IActionResult> GetNotificationById(int Id)
         {
             var notification = await notificationRepository.GetNotificationById(Id);
             if (notification is null)
@@ -48,29 +48,34 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateNotification([FromBody] Notification notification)
+        public async Task<IActionResult> CreateNotification([FromBody] Notification notification)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                ModelState.AddModelError("","Invalid Format!");
+                return BadRequest(ModelState);
             }
             await notificationRepository.CreateNotification(notification);
             return CreatedAtAction(nameof(GetNotificationById), new { id = notification.Id }, notification);
         }
 
-        [HttpPut]
-        public async Task<ActionResult> UpdateNotification([FromBody] Notification notification)
+        [HttpPut("id")]
+        public async Task<IActionResult> UpdateNotification(int id, [FromBody] Notification notification)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest();
+                ModelState.AddModelError("","Invalid Format!");
+                return BadRequest(ModelState);
             }
+            var existingNotification = notificationRepository.GetNotificationById(id);
+            if(existingNotification is null)
+                return NotFound();
             await notificationRepository.UpdateNotification(notification);
             return Ok();
         }
 
         [HttpDelete("{notificationId}")]
-        public async Task<ActionResult> DeleteNotification(int notificationId)
+        public async Task<IActionResult> DeleteNotification(int notificationId)
         {
             var notification = await notificationRepository.GetNotificationById(notificationId);
             if (notification is null)
@@ -82,7 +87,7 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost("send/{userId}")]
-        public async Task<ActionResult> SendNotification(string userId, [FromBody] string message)
+        public async Task<IActionResult> SendNotification(string userId, [FromBody] string message)
         {
             if (!ModelState.IsValid)
             {
@@ -90,9 +95,7 @@ namespace SamaritanAPI.Controllers
             }
             var user = await userManager.FindByIdAsync(userId);
             if (user is null)
-            {
                 return NotFound();
-            }
             await notificationRepository.SendNotification(userId, message);
             return Ok();
         }
