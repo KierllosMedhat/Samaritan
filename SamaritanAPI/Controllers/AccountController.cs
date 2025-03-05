@@ -1,18 +1,15 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
 using SamaritanAPI.Authentication;
 
 namespace SamaritanAPI.Controllers
 {
+    [Authorize(Roles =$"{AppRoles.Administrator}")]
     [ApiController]
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
@@ -45,18 +42,22 @@ namespace SamaritanAPI.Controllers
                     FullName = model.FullName,
                     PhoneNumber = model.PhoneNumber,
                     Email = model.Email,
+                    Status = Status.Offline,
                     SecurityStamp = Guid.NewGuid().ToString()
                 };
-                var result = await userManger.CreateAsync(user, model.Password);
+                var userResult = await userManger.CreateAsync(user, model.Password);
+                var roleResult = await userManger.AddToRoleAsync(user, model.Role);
                 // If the user is successfully created, return ok
-                if(result.Succeeded)
+                if(userResult.Succeeded && roleResult.Succeeded)
                 {
-                    var token = GenerateToken(model.UserName);
+                    var token = GenerateToken(model.UserName, user);
                     return Ok(new { token });
                 }
                 // if there are any errors, add them to the modelstate object 
                 //and return the error to the client 
-                foreach(var error in result.Errors)
+                foreach(var error in userResult.Errors)
+                    ModelState.AddModelError("", error.Description);
+                foreach(var error in roleResult.Errors)
                     ModelState.AddModelError("", error.Description);
                 // if we got this far, something failed, redisplay form
             }
@@ -73,7 +74,7 @@ namespace SamaritanAPI.Controllers
                 {
                     if(await userManger.CheckPasswordAsync(user, model.Password))
                     {
-                        var token = GenerateToken(model.UserName);
+                        var token = GenerateToken(model.UserName, user);
                         return Ok(new { token });
                     }
                 }
@@ -83,7 +84,7 @@ namespace SamaritanAPI.Controllers
             return BadRequest(ModelState);
         }
 
-        private string? GenerateToken(string userName)
+        private async Task<string?> GenerateToken(string userName, AppUser user)
         {
             var secret = configuration["Jwt:Secret"];
             var issuer = configuration["Jwt:ValidIssuer"];
@@ -94,12 +95,15 @@ namespace SamaritanAPI.Controllers
             
             var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
             var tokenHandler = new JwtSecurityTokenHandler();
+            var userRoles = await userManger.GetRolesAsync(user);
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, userName)
+            };
+            claims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new []
-                {
-                    new Claim(ClaimTypes.Name, userName)
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(1),
                 Issuer = issuer,
                 Audience = audience,

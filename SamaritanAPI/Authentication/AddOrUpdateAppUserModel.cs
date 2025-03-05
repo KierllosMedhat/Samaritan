@@ -22,8 +22,10 @@ namespace SamaritanAPI.Authentication
         [Required(ErrorMessage = "PhoneNumber is required")]
         [Length(11,11,ErrorMessage = "Invalid Phone Number, Must be 11 digits!")]
         public required string PhoneNumber { get; set; }
-        public Status? Status { get; set; }
-        public BloodGroup? BloodGroup { get; set; }
-        public List<Donor>? Donors { get; set; }
+        [Required(ErrorMessage = "Role is required")]
+        public required string Role { get; set;}
+        public Status Status { get; set; } = Status.Offline;
+        // public BloodGroup? BloodGroup { get; set; }
+        // public List<Donor>? Donors { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace SamaritanAPI.Authentication
     public class AppUser : IdentityUser
     {
         public required string FullName { get; set; }
-        public Status? Status { get; set; }
+        public required Status Status { get; set; } = Status.Offline;
         public BloodGroup? BloodGroup { get; set; }
         public List<Donor>? DonorsList { get; set; }
 
