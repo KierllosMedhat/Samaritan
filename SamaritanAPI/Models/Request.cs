@@ -1,4 +1,5 @@
-﻿using SamaritanAPI.Models.Types;
+﻿using SamaritanAPI.Authentication;
+using SamaritanAPI.Models.Types;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -9,8 +10,8 @@ namespace SamaritanAPI.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public RequestLevel RequestLevel { get; set; }
-        public string RequestTimeline { get; set; } = string.Empty;
+        public RequestStatus RequestStatus { get; set; }
+        public string Timeline { get; set; } = "";
         public required Patient Patient { get; set; }
         [ForeignKey("Patient")]
         public int PatientId { get; set; }
@@ -30,6 +31,8 @@ namespace SamaritanAPI.Models
         public string? PatientCompanionPhone2 { get; set; }
         public string? PatientCompanionJob { get; set; }
         public bool CanAfford { get; set; }
+        public List<AppUser> Diallers { get; set; } = new List<AppUser>();
+        public List<AppUser> Subleaders { get; set; } = new List<AppUser>();
         [ForeignKey("Donor")]
         public int DonorId { get; set; }
         public Donor? Donor { get; set; }
