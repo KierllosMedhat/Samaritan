@@ -43,7 +43,35 @@ namespace SamaritanAPI.Repositories
             return user.Notifications;
         }
 
-        public async Task SendNotification(string userId, string message)
+        public async Task NotifyAll(int requestId, string title, string body)
+        {
+            var request = await context.Requests.FirstAsync(req => req.Id == requestId);
+            if(request is null)
+                return;
+            foreach(AppUser user in request.Diallers)
+                await SendNotification(user.Id,title,body);
+            
+            foreach(AppUser user in request.Subleaders)
+                await SendNotification(user.Id,title,body); 
+
+            var admin = context.Users.First(u => u.Role == "Administrator");
+            await SendNotification(admin.Id, title, body);
+        }
+
+        public async Task NotifySubleaders(int requestId, string title, string body)
+        {
+            var request = await context.Requests.FirstAsync(req => req.Id == requestId);
+            if(request is null)
+                return;
+
+            foreach(AppUser user in request.Subleaders)
+                await SendNotification(user.Id,title,body); 
+
+            var admin = context.Users.First(u => u.Role == "Administrator");
+            await SendNotification(admin.Id, title, body);
+        }
+
+        public async Task SendNotification(string userId, string title, string body)
         {
             var user = await userManager.FindByIdAsync(userId);
             if (user == null)
@@ -52,10 +80,12 @@ namespace SamaritanAPI.Repositories
             {
                 UserId = userId,
                 User = user,
-                Text = message,
+                Title = title,
+                Body = body,
                 IsRead = false
             };
             await CreateNotification(notification);
+            await context.SaveChangesAsync();
         }
 
         public async Task UpdateNotification(Notification notification)

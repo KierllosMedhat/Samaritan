@@ -9,6 +9,8 @@ namespace SamaritanAPI.Repositories.Interfaces
         Task CreateNotification(Notification notification);
         Task UpdateNotification(Notification notification);
         Task DeleteNotification(int notificationId);
-        Task SendNotification(string userId, string message);
+        Task SendNotification(string userId, string title ,string body);
+        Task NotifyAll(int requestId, string title, string body);
+        Task NotifySubleaders(int requestId, string title, string body);
     }
 }

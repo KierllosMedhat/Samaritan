@@ -16,9 +16,13 @@ namespace SamaritanAPI.Repositories
     {
         private readonly ApplicationDbContext context;
         private readonly UserManager<AppUser> userManager;
+        private readonly NotificationRepository notificationRepository;
 
-        public RequestRepository(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public RequestRepository(ApplicationDbContext context, 
+            UserManager<AppUser> userManager,
+            NotificationRepository notificationRepository)
         {
+            this.notificationRepository = notificationRepository;
             this.context = context;
             this.userManager = userManager;
         }
@@ -37,16 +41,20 @@ namespace SamaritanAPI.Repositories
             request.RequestStatus = RequestStatus.Pending;
             await context.Requests.AddAsync(request);
             await context.SaveChangesAsync();
-            
+            var admin = context.Users.First(u => u.Role == "Administrator");
+            await notificationRepository.SendNotification(admin.Id, $"{request.Id}: Request Created", $"Request {request.Id} Successfully Created at {DateTime.UtcNow}");
             await UpdateTimelineAsync(request.Id, "Request Created");
         }
 
         public async Task DeleteRequest(int requestId)
         {
             var request = await context.Requests.FirstAsync(req => req.Id == requestId );
-            if (request != null)
-                context.Requests.Remove(request);
+            if (request == null)
+                return;
+            context.Requests.Remove(request);
             await context.SaveChangesAsync();
+            var admin = context.Users.First(u => u.Role == "Administrator");
+            await notificationRepository.SendNotification(admin.Id, $"{requestId}: Request Deleted", $"Request {request.Id} Was Deleted at {DateTime.UtcNow}");
         }
 
         public async Task UpdateRequest(Request request)
@@ -70,6 +78,7 @@ namespace SamaritanAPI.Repositories
             await context.SaveChangesAsync();
             return true;
         }
+
         public async Task<bool> AssignSubleader(int requestId, string subleaderId)
         {
             var request = await context.Requests.Include(r => r.Subleaders).FirstAsync(r => r.Id == requestId);
@@ -83,6 +92,7 @@ namespace SamaritanAPI.Repositories
             context.Requests.Update(request);
             await context.SaveChangesAsync();
             await UpdateTimelineAsync(requestId, $"Subleader (User ID: {subleaderId}) assigned to Request.");
+            await notificationRepository.SendNotification(subleaderId, $"New Request: {requestId}", $"You've been assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
 
@@ -99,6 +109,7 @@ namespace SamaritanAPI.Repositories
             context.Requests.Update(request);
             await context.SaveChangesAsync();
             await UpdateTimelineAsync(requestId, $"Dialler (User ID: {diallerId}) assigned to Request.");
+            await notificationRepository.SendNotification(diallerId, $"New Request: {requestId}", $"You've been assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
 
@@ -109,8 +120,10 @@ namespace SamaritanAPI.Repositories
                 return false;
             req.RequestStatus = RequestStatus.NoDiallerFound;
             context.Requests.Update(req);
-            await UpdateTimelineAsync(requestId, $"Raised No Diallers Found!");
             await context.SaveChangesAsync();
+            await UpdateTimelineAsync(requestId, $"Raised No Diallers Found!");
+            var admin = context.Users.First(u => u.Role == "Administrator");
+            await notificationRepository.SendNotification(admin.Id, $"{requestId}: No Diallers Found", $"No Diallers were found for the request {requestId}, at {DateTime.UtcNow}");
             return true;
         }
 
@@ -125,8 +138,9 @@ namespace SamaritanAPI.Repositories
             request.DonorId = donorId;
             request.Donor = donor;
             context.Requests.Update(request);
-            await UpdateTimelineAsync(requestId, $"Donor ({donorId}) assigned to Request");
             await context.SaveChangesAsync();
+            await UpdateTimelineAsync(requestId, $"Donor ({donorId}) assigned to Request");
+            await notificationRepository.NotifyAll(requestId, $"{requestId}: Donor Assigned", $"Donor {donorId}, was assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
 
@@ -137,8 +151,9 @@ namespace SamaritanAPI.Repositories
                 return false;
             request.RequestStatus = RequestStatus.NoDonorFound;
             context.Requests.Update(request);
-            await UpdateTimelineAsync(requestId, $"Raised No Donors Found!");
             await context.SaveChangesAsync();
+            await UpdateTimelineAsync(requestId, $"Raised No Donors Found!");
+            await notificationRepository.NotifySubleaders(requestId, $"{requestId}:No Donor Found", $"No Donor Was Found By Dialler {userManager.GetUserIdAsync} at {DateTime.UtcNow}");
             return true;
         }
         public async Task<bool> CloseRequest(int requestId)
@@ -148,8 +163,9 @@ namespace SamaritanAPI.Repositories
                 return false;
             request.RequestStatus = RequestStatus.Completed;
             context.Requests.Update(request);
-            await UpdateTimelineAsync(requestId, $"Request Closed!");
             await context.SaveChangesAsync();
+            await UpdateTimelineAsync(requestId, $"Request Closed!");
+            await notificationRepository.NotifyAll(requestId, $"{requestId}: Request Closed",$"{requestId} closed at {DateTime.UtcNow}");
             return true;
         }
         public async Task<RequestStatus?> GetRequestStatus(int requestId)

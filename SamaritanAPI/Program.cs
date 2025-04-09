@@ -57,6 +57,7 @@ namespace SamaritanAPI
             builder.Services.AddScoped<IPatientRepository, PatientRepository>();
             builder.Services.AddScoped<IDonorRepository, DonorRepository>();
             builder.Services.AddScoped<IServantCompanionRepository, ServantCompanionRepository>();
+            builder.Services.AddScoped<IRequestRepository, RequestRepository>();
 
             builder.Services.AddSingleton<SeedingServices>();
 

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using SamaritanAPI.Authentication;
 using SamaritanAPI.Models;
 using SamaritanAPI.Repositories;
+using SamaritanAPI.Repositories.Interfaces;
 
 namespace SamaritanAPI.Controllers
 {
@@ -18,10 +19,14 @@ namespace SamaritanAPI.Controllers
     {
         private readonly NotificationRepository notificationRepository;
         private readonly UserManager<AppUser> userManager;
+        private readonly IRequestRepository requestRepository;
 
-        public NotificationController(NotificationRepository notificationRepository, UserManager<AppUser> userManager)
+        public NotificationController(NotificationRepository notificationRepository, 
+            UserManager<AppUser> userManager,
+            IRequestRepository requestRepository)
         {
             this.userManager = userManager;
+            this.requestRepository = requestRepository;
             this.notificationRepository = notificationRepository;
         }
 
@@ -87,7 +92,7 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost("send/{userId}")]
-        public async Task<IActionResult> SendNotification(string userId, [FromBody] string message)
+        public async Task<IActionResult> SendNotification(string userId, [FromBody] string title, [FromBody] string body)
         {
             if (!ModelState.IsValid)
             {
@@ -96,7 +101,20 @@ namespace SamaritanAPI.Controllers
             var user = await userManager.FindByIdAsync(userId);
             if (user is null)
                 return NotFound();
-            await notificationRepository.SendNotification(userId, message);
+            await notificationRepository.SendNotification(userId, title, body);
+            return Ok();
+        }
+
+        public async Task<IActionResult> NotifyAll(int requestId, [FromBody] string title, [FromBody] string body)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+            var request = await requestRepository.GetRequest(requestId);
+            if (request is null)
+                return NotFound();
+            await notificationRepository.NotifyAll(request.Id, title, body);
             return Ok();
         }
         

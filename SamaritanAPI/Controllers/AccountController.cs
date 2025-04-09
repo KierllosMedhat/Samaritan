@@ -42,6 +42,7 @@ namespace SamaritanAPI.Controllers
                     FullName = model.FullName,
                     PhoneNumber = model.PhoneNumber,
                     Email = model.Email,
+                    Role = model.Role,
                     Status = Status.Offline,
                     SecurityStamp = Guid.NewGuid().ToString()
                 };
