@@ -36,35 +36,57 @@ namespace SamaritanAPI.Repositories
             if(request is null) return null;
             return request;
         }
-        public async Task CreateRequest(Request request)
+        public async Task<bool> CreateRequest(Request request)
         {
-            request.RequestStatus = RequestStatus.Pending;
-            await context.Requests.AddAsync(request);
-            await context.SaveChangesAsync();
-            var admin = context.Users.First(u => u.Role == "Administrator");
-            await notificationRepository.SendNotification(admin.Id, $"{request.Id}: Request Created", $"Request {request.Id} Successfully Created at {DateTime.UtcNow}");
-            await UpdateTimelineAsync(request.Id, "Request Created");
-        }
+            try
+            {
+                request.RequestStatus = RequestStatus.Pending;
+                await context.Requests.AddAsync(request);
+                await context.SaveChangesAsync();
+                var admin = context.Users.First(u => u.Role == "Administrator");
+                await notificationRepository.SendNotification(admin.Id, $"{request.Id}: Request Created", $"Request {request.Id} Successfully Created at {DateTime.UtcNow}");
+                await UpdateTimelineAsync(request.Id, "Request Created");
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }}
 
-        public async Task DeleteRequest(int requestId)
+        public async Task<bool> DeleteRequest(int requestId)
         {
             var request = await context.Requests.FirstAsync(req => req.Id == requestId );
             if (request == null)
-                return;
-            context.Requests.Remove(request);
-            await context.SaveChangesAsync();
-            var admin = context.Users.First(u => u.Role == "Administrator");
-            await notificationRepository.SendNotification(admin.Id, $"{requestId}: Request Deleted", $"Request {request.Id} Was Deleted at {DateTime.UtcNow}");
+                return false;
+            try
+            {
+                context.Requests.Remove(request);
+                await context.SaveChangesAsync();
+                var admin = context.Users.First(u => u.Role == "Administrator");
+                await notificationRepository.SendNotification(admin.Id, $"{requestId}: Request Deleted", $"Request {request.Id} Was Deleted at {DateTime.UtcNow}");
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
+            }
         }
 
-        public async Task UpdateRequest(Request request)
+        public async Task<bool> UpdateRequest(Request request)
         {
             var req = await context.Requests.FirstAsync(req => req.Id == request.Id);
-            if (req is not null)
+            if (req is null)
+                return false;
+            try
             {
                 req = request;
                 context.Requests.Update(req);
                 await context.SaveChangesAsync();
+                return true;
+            }
+            catch (System.Exception)
+            {
+                return false;
             }
         }
 

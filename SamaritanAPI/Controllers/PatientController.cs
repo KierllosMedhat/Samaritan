@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SamaritanAPI.Models;
-using SamaritanAPI.Repositories;
+using SamaritanAPI.Repositories.Interfaces;
 
 namespace SamaritanAPI.Controllers
 {
@@ -14,8 +10,8 @@ namespace SamaritanAPI.Controllers
     [Route("api/[controller]")]
     public class PatientController : ControllerBase
     {
-        private readonly PatientRepository patientRepository;
-        public PatientController(PatientRepository patientRepository)
+        private readonly IPatientRepository patientRepository;
+        public PatientController(IPatientRepository patientRepository)
             => this.patientRepository = patientRepository;
         
         [HttpGet]

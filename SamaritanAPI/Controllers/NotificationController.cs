@@ -17,11 +17,11 @@ namespace SamaritanAPI.Controllers
     [Route("api/[controller]")]
     public class NotificationController : ControllerBase
     {
-        private readonly NotificationRepository notificationRepository;
+        private readonly INotificationRepository notificationRepository;
         private readonly UserManager<AppUser> userManager;
         private readonly IRequestRepository requestRepository;
 
-        public NotificationController(NotificationRepository notificationRepository, 
+        public NotificationController(INotificationRepository notificationRepository, 
             UserManager<AppUser> userManager,
             IRequestRepository requestRepository)
         {

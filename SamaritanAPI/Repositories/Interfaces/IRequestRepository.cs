@@ -7,9 +7,9 @@ namespace SamaritanAPI.Repositories.Interfaces
     {
         Task<IEnumerable<Request>> GetAllRequests();
         Task<Request?> GetRequest(int requestId);
-        Task CreateRequest(Request request);
-        Task UpdateRequest(Request request);
-        Task DeleteRequest(int requestId);
+        Task<bool> CreateRequest(Request request);
+        Task<bool> UpdateRequest(Request request);
+        Task<bool> DeleteRequest(int requestId);
 
         Task<RequestStatus?> GetRequestStatus(int requestId);
         Task<bool> UpdateTimelineAsync(int requestId, string action);
