@@ -17,7 +17,6 @@ namespace SamaritanAPI.Repositories
         private readonly ApplicationDbContext context;
         private readonly UserManager<AppUser> userManager;
         private readonly NotificationRepository notificationRepository;
-
         public RequestRepository(ApplicationDbContext context, 
             UserManager<AppUser> userManager,
             NotificationRepository notificationRepository)
@@ -26,10 +25,8 @@ namespace SamaritanAPI.Repositories
             this.context = context;
             this.userManager = userManager;
         }
-
         public async Task<IEnumerable<Request>> GetAllRequests()
             => await context.Requests.ToListAsync();
-
         public async Task<Request?> GetRequest(int requestId)
         {
             var request = await context.Requests.FirstOrDefaultAsync(req => req.Id == requestId);
@@ -52,7 +49,6 @@ namespace SamaritanAPI.Repositories
             {
                 return false;
             }}
-
         public async Task<bool> DeleteRequest(int requestId)
         {
             var request = await context.Requests.FirstAsync(req => req.Id == requestId );
@@ -71,7 +67,6 @@ namespace SamaritanAPI.Repositories
                 return false;
             }
         }
-
         public async Task<bool> UpdateRequest(Request request)
         {
             var req = await context.Requests.FirstAsync(req => req.Id == request.Id);
@@ -100,7 +95,6 @@ namespace SamaritanAPI.Repositories
             await context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> AssignSubleader(int requestId, string subleaderId)
         {
             var request = await context.Requests.Include(r => r.Subleaders).FirstAsync(r => r.Id == requestId);
@@ -117,7 +111,6 @@ namespace SamaritanAPI.Repositories
             await notificationRepository.SendNotification(subleaderId, $"New Request: {requestId}", $"You've been assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
-
         public async Task<bool> AssignDialler(int requestId, string diallerId)
         {
             var request = await context.Requests.Include(r => r.Diallers).FirstAsync(r => r.Id == requestId);
@@ -134,7 +127,6 @@ namespace SamaritanAPI.Repositories
             await notificationRepository.SendNotification(diallerId, $"New Request: {requestId}", $"You've been assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
-
         public async Task<bool> RaiseNoDiallerFound(int requestId)
         {
             var req = await context.Requests.FirstAsync(req => req.Id == requestId);
@@ -148,7 +140,6 @@ namespace SamaritanAPI.Repositories
             await notificationRepository.SendNotification(admin.Id, $"{requestId}: No Diallers Found", $"No Diallers were found for the request {requestId}, at {DateTime.UtcNow}");
             return true;
         }
-
         public async Task<bool> AssignDonor(int requestId, int donorId)
         {
             var request = await context.Requests.FindAsync(requestId);
@@ -165,7 +156,6 @@ namespace SamaritanAPI.Repositories
             await notificationRepository.NotifyAll(requestId, $"{requestId}: Donor Assigned", $"Donor {donorId}, was assigned to request {requestId} at {DateTime.UtcNow}");
             return true;
         }
-
         public async Task<bool> RaiseNoDonorFound(int requestId)
         {
             var request = await context.Requests.FindAsync(requestId);
