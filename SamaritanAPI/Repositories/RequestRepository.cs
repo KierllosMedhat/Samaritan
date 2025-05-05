@@ -16,10 +16,10 @@ namespace SamaritanAPI.Repositories
     {
         private readonly ApplicationDbContext context;
         private readonly UserManager<AppUser> userManager;
-        private readonly NotificationRepository notificationRepository;
+        private readonly INotificationRepository notificationRepository;
         public RequestRepository(ApplicationDbContext context, 
             UserManager<AppUser> userManager,
-            NotificationRepository notificationRepository)
+            INotificationRepository notificationRepository)
         {
             this.notificationRepository = notificationRepository;
             this.context = context;

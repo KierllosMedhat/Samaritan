@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SamaritanAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+115503d30289959578b2e0ce5228e5247deb7f07")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+654535de2dfa3baed24d388efe6c4512f01d8247")]
 [assembly: System.Reflection.AssemblyProductAttribute("SamaritanAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SamaritanAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SamaritanAPI.Authentication;
 using SamaritanAPI.Models;
+using SamaritanAPI.Models.DTOs;
 using SamaritanAPI.Repositories;
 using SamaritanAPI.Repositories.Interfaces;
 
@@ -92,8 +93,10 @@ namespace SamaritanAPI.Controllers
         }
 
         [HttpPost("send/{userId}")]
-        public async Task<IActionResult> SendNotification(string userId, [FromBody] string title, [FromBody] string body)
+        public async Task<IActionResult> SendNotification(string userId, [FromBody] NotificationDto notification)
         {
+            string title = notification.title;
+            string body = notification.body;
             if (!ModelState.IsValid)
             {
                 return BadRequest();
@@ -105,8 +108,11 @@ namespace SamaritanAPI.Controllers
             return Ok();
         }
 
-        public async Task<IActionResult> NotifyAll(int requestId, [FromBody] string title, [FromBody] string body)
+        [HttpPut("notify-all/{requestId}")]
+        public async Task<IActionResult> NotifyAll(int requestId, [FromBody] NotificationDto notification)
         {
+            string title = notification.title;
+            string body = notification.body;
             if (!ModelState.IsValid)
             {
                 return BadRequest();
